@@ -1,34 +1,94 @@
+using System;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class Ball : MonoBehaviour
 {
-    [SerializeField] private float speed = 5f;
+    public static float speed = 5f;
+    private InputAction input;
 
+    [SerializeField] private Player player;
+    [SerializeField] private bool isAttachedToPlayer;
+    [SerializeField] private float offsetY = 0.3f;
     private Vector2 direction;
+
+    private void Awake()
+    {
+        player.GetComponent<Player>();
+        input = InputSystem.actions.FindAction("Jump");
+    }
 
     private void Start()
     {
-        direction = new Vector2(Random.Range(-1f, 1f), 1f).normalized;
+        ResetBall();
     }
 
     private void Update()
     {
-        transform.Translate(speed * Time.deltaTime * direction);
+        if (isAttachedToPlayer && input.WasPressedThisFrame())
+            LaunchBall();
+
+        if (!isAttachedToPlayer)
+            transform.Translate(speed * Time.deltaTime * direction);
+    }
+
+    private void LaunchBall()
+    {
+        gameObject.transform.parent = null;
+        isAttachedToPlayer = false;
+        direction = Vector2.up;
+        Debug.Log("Ball launched with direction: " + direction);
+    }
+
+    private void ResetBall()
+    {
+        isAttachedToPlayer = true;
+        gameObject.transform.parent = player.transform;
+        transform.position = new Vector2(player.transform.position.x, player.transform.position.y + offsetY);
+    }
+
+    private void PlayerBounce()
+    {
+        direction = new Vector2(transform.position.x - player.transform.position.x, Mathf.Abs(direction.y)).normalized;
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.gameObject.CompareTag("Player") || collision.gameObject.CompareTag("Wall") || collision.gameObject.CompareTag("Block"))
+        if (collision.gameObject.CompareTag("Wall"))
         {
             direction = Vector2.Reflect(direction, collision.GetContact(0).normal);
         }
+
+        if (collision.gameObject.CompareTag("Roof"))
+        {
+            direction = Vector2.Reflect(direction, collision.GetContact(0).normal);
+            if(!Player.isShort)
+                Player.isShort = true;
+        }
+
+        if (collision.gameObject.CompareTag("Block"))
+        {
+            direction = Vector2.Reflect(direction, collision.GetContact(0).normal);
+            collision.gameObject.GetComponent<Block>().HandleCollision();
+        }
+
+        if (collision.gameObject.CompareTag("Player"))
+        {
+            PlayerBounce();
+        }
     }
 
-    private void OnTriggerExit2D(Collider2D collision)
+    private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.gameObject.CompareTag("Floor"))
         {
+            Debug.Log("Ball hit the floor. Player loses a life.");
             Player.playerLives -= 1f;
+            if (Player.playerLives >= 0f)
+                ResetBall();
+            else
+                transform.position = new Vector2(0f, -20f); // Move ball off-screen when game over
         }
     }
 }

@@ -27,7 +27,6 @@ public class BlockSetup : MonoBehaviour
                 {
                     float offset1;
                     float offset2;
-                    Vector2 spawnPos;
 
                     if (blocksPerRow % 2 == 0)
                     {
@@ -40,7 +39,7 @@ public class BlockSetup : MonoBehaviour
                         offset2 = (blocksPerRow / 2 * offsetX);
                     }
 
-                    spawnPos = new Vector2(offset1 - offset2, row.position.y);
+                    Vector2 spawnPos = new Vector2(offset1 - offset2, row.position.y);
 
                     Instantiate(blockPrefab, spawnPos, Quaternion.identity);
                 }
@@ -61,7 +60,6 @@ public class BlockSetup : MonoBehaviour
                     {
                         float offset1;
                         float offset2;
-                        Vector2 spawnPos;
 
                         if(blocksPerRow % 2 == 0)
                         {
@@ -76,7 +74,7 @@ public class BlockSetup : MonoBehaviour
                             //Debug.Log($"Spawning block at: {offset1} minus {offset2}");
                         }
 
-                        spawnPos = new Vector2(offset1 - offset2, row.position.y);
+                        Vector2 spawnPos = new Vector2(offset1 - offset2, row.position.y);
 
                         Gizmos.DrawWireCube(spawnPos, blockPrefab.GetComponent<SpriteRenderer>().size * blockPrefab.transform.localScale);
 
