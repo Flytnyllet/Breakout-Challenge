@@ -3,16 +3,16 @@ using UnityEngine;
 public class Block : MonoBehaviour
 {
     [SerializeField] private int blockHealth = 1;
-    [SerializeField] private Ball ball;
 
-    public void HandleCollision()
+    public void HandleCollision(Ball ball)
     {
+        Debug.Log("Block hit!");
         Player.score += 10f;
         blockHealth--;
         if (blockHealth <= 0)
         {
-            Ball.speed += 0.1f;
-            MaybeSpawnPowerUp(0.05f);
+            ball.ballSpeed += ball.ballSpeedIncrease;
+            MaybeSpawnPowerUp(0.1f);
             Destroy(gameObject);
         }
     }

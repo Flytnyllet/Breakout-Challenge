@@ -2,10 +2,12 @@ using System;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using static Ball;
 
 public class Ball : MonoBehaviour
 {
-    public static float speed = 5f;
+    [SerializeField] public float ballSpeed = 8f;
+    [SerializeField] public float ballSpeedIncrease = 0.5f;
     private InputAction input;
 
     [SerializeField] private Player player;
@@ -30,7 +32,7 @@ public class Ball : MonoBehaviour
             LaunchBall();
 
         if (!isAttachedToPlayer)
-            transform.Translate(speed * Time.deltaTime * direction);
+            transform.Translate(ballSpeed * Time.deltaTime * direction);
     }
 
     private void LaunchBall()
@@ -44,6 +46,8 @@ public class Ball : MonoBehaviour
     private void ResetBall()
     {
         isAttachedToPlayer = true;
+        Player.playerWidthUpdated = false;
+        Player.isShort = false;
         gameObject.transform.parent = player.transform;
         transform.position = new Vector2(player.transform.position.x, player.transform.position.y + offsetY);
     }
@@ -63,14 +67,18 @@ public class Ball : MonoBehaviour
         if (collision.gameObject.CompareTag("Roof"))
         {
             direction = Vector2.Reflect(direction, collision.GetContact(0).normal);
-            if(!Player.isShort)
+            if (!Player.isShort)
+            {
                 Player.isShort = true;
+                Player.playerWidthUpdated = false;
+                Debug.Log("Player is now short. Player width will be updated in the next frame.");
+            }
         }
 
         if (collision.gameObject.CompareTag("Block"))
         {
             direction = Vector2.Reflect(direction, collision.GetContact(0).normal);
-            collision.gameObject.GetComponent<Block>().HandleCollision();
+            collision.gameObject.GetComponent<Block>().HandleCollision(this);
         }
 
         if (collision.gameObject.CompareTag("Player"))
@@ -88,7 +96,9 @@ public class Ball : MonoBehaviour
             if (Player.playerLives >= 0f)
                 ResetBall();
             else
+            {
                 transform.position = new Vector2(0f, -20f); // Move ball off-screen when game over
+            }
         }
     }
 }

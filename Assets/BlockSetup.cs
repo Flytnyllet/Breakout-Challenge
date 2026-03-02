@@ -8,6 +8,7 @@ public class BlockSetup : MonoBehaviour
     [SerializeField] private GameObject blockPrefab;
 
     [SerializeField] private Transform[] rows;
+    [SerializeField] private Gradient gradient;
     [SerializeField] private int blocksPerRow;
     [SerializeField] private float offsetX = 1.4f;
     //[SerializeField] private float offsetY = 0.5f;
@@ -41,7 +42,9 @@ public class BlockSetup : MonoBehaviour
 
                     Vector2 spawnPos = new Vector2(offset1 - offset2, row.position.y);
 
-                    Instantiate(blockPrefab, spawnPos, Quaternion.identity);
+                    GameObject newBlock = Instantiate(blockPrefab, spawnPos, Quaternion.identity);
+                    //newBlock.GetComponent<SpriteRenderer>().color = gradient.Evaluate((float)i / (blocksPerRow - 1)); //Vertical gradient based on block index within the row
+                    newBlock.GetComponent<SpriteRenderer>().color = gradient.Evaluate((float)Array.IndexOf(rows, row) / (rows.Length - 1)); //Horizontal gradient based on row index
                 }
             }
         }
@@ -61,9 +64,9 @@ public class BlockSetup : MonoBehaviour
                         float offset1;
                         float offset2;
 
-                        if(blocksPerRow % 2 == 0)
+                        if (blocksPerRow % 2 == 0)
                         {
-                            offset1 = ((row.position.x + offsetX/2) + (offsetX * i));
+                            offset1 = ((row.position.x + offsetX / 2) + (offsetX * i));
                             offset2 = (blocksPerRow / 2 * offsetX);
                             //Debug.Log($"Spawning block at: {offset1} minus {offset2} equals {offset1 - offset2}");
                         }
