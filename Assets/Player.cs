@@ -4,19 +4,19 @@ using UnityEngine.UIElements;
 
 public class Player : MonoBehaviour
 {
-    [SerializeField] public static float playerLives = 3f;
-    public static float score = 0f;
-    [SerializeField] public static bool isShort = false;
-    public static bool playerWidthUpdated = false;
 
     private InputAction moveAction;
     private SpriteRenderer spriteRenderer;
+
+    public bool playerWidthUpdated = false;
+    public bool isShort = false;
 
     private float screenHalfWidthInWorldUnits;
     private float playerWidth;
     private bool canMoveRight = true;
     private bool canMoveLeft = true;
 
+    [SerializeField] public int playerLives = 0;
     [SerializeField] private float moveSpeed = 5f;
 
     private void Awake()
@@ -40,7 +40,7 @@ public class Player : MonoBehaviour
 
     private void HandleMovement(Vector2 moveInput)
     {
-        //Gameover return logic
+        if(UIManager.Instance.isGameOver || UIManager.Instance.isGameWon) return;
 
         float screenRightLimit = screenHalfWidthInWorldUnits - playerWidth / 2;
         float screenLeftLimit = -screenHalfWidthInWorldUnits + playerWidth / 2;

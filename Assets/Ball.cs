@@ -6,9 +6,13 @@ using static Ball;
 
 public class Ball : MonoBehaviour
 {
+    [SerializeField] private BlockSetup blocks;
+
+    private InputAction input;
+
     [SerializeField] public float ballSpeed = 8f;
     [SerializeField] public float ballSpeedIncrease = 0.5f;
-    private InputAction input;
+    [SerializeField] public bool isLifeLost;
 
     [SerializeField] private Player player;
     [SerializeField] private bool isAttachedToPlayer;
@@ -31,7 +35,7 @@ public class Ball : MonoBehaviour
         if (isAttachedToPlayer && input.WasPressedThisFrame())
             LaunchBall();
 
-        if (!isAttachedToPlayer)
+        if (!isAttachedToPlayer && !UIManager.Instance.isGameWon && !UIManager.Instance.isGameOver)
             transform.Translate(ballSpeed * Time.deltaTime * direction);
     }
 
@@ -46,8 +50,8 @@ public class Ball : MonoBehaviour
     private void ResetBall()
     {
         isAttachedToPlayer = true;
-        Player.playerWidthUpdated = false;
-        Player.isShort = false;
+        player.playerWidthUpdated = false;
+        player.isShort = false;
         gameObject.transform.parent = player.transform;
         transform.position = new Vector2(player.transform.position.x, player.transform.position.y + offsetY);
     }
@@ -67,10 +71,10 @@ public class Ball : MonoBehaviour
         if (collision.gameObject.CompareTag("Roof"))
         {
             direction = Vector2.Reflect(direction, collision.GetContact(0).normal);
-            if (!Player.isShort)
+            if (!player.isShort)
             {
-                Player.isShort = true;
-                Player.playerWidthUpdated = false;
+                player.isShort = true;
+                player.playerWidthUpdated = false;
                 Debug.Log("Player is now short. Player width will be updated in the next frame.");
             }
         }
@@ -78,7 +82,7 @@ public class Ball : MonoBehaviour
         if (collision.gameObject.CompareTag("Block"))
         {
             direction = Vector2.Reflect(direction, collision.GetContact(0).normal);
-            collision.gameObject.GetComponent<Block>().HandleCollision(this);
+            collision.gameObject.GetComponent<Block>().HandleCollision(this, ref blocks.totalBlocks);
         }
 
         if (collision.gameObject.CompareTag("Player"))
@@ -92,11 +96,14 @@ public class Ball : MonoBehaviour
         if (collision.gameObject.CompareTag("Floor"))
         {
             Debug.Log("Ball hit the floor. Player loses a life.");
-            Player.playerLives -= 1f;
-            if (Player.playerLives >= 0f)
+            player.playerLives -= 1;
+            isLifeLost = true;
+            if (player.playerLives > 0f)
                 ResetBall();
             else
             {
+                UIManager.Instance.isGameOver = true;
+                direction = Vector2.zero;
                 transform.position = new Vector2(0f, -20f); // Move ball off-screen when game over
             }
         }

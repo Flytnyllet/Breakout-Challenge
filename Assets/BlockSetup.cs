@@ -5,8 +5,9 @@ using UnityEngine;
 
 public class BlockSetup : MonoBehaviour
 {
-    [SerializeField] private GameObject blockPrefab;
+    public int totalBlocks;
 
+    [SerializeField] private GameObject blockPrefab;
     [SerializeField] private Transform[] rows;
     [SerializeField] private Gradient gradient;
     [SerializeField] private int blocksPerRow;
@@ -48,6 +49,7 @@ public class BlockSetup : MonoBehaviour
                 }
             }
         }
+        totalBlocks = rows.Length * blocksPerRow;
     }
 
     private void OnDrawGizmos()
