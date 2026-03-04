@@ -1,15 +1,17 @@
 using System;
+using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using static Ball;
 
 public class Ball : MonoBehaviour
 {
     [SerializeField] private BlockSetup blocks;
+    [SerializeField] private TextShaker textShaker;
 
     private InputAction input;
 
+    private float startBallSpeed;
     [SerializeField] public float ballSpeed = 8f;
     [SerializeField] public float ballSpeedIncrease = 0.5f;
     [SerializeField] public bool isLifeLost;
@@ -22,11 +24,13 @@ public class Ball : MonoBehaviour
     private void Awake()
     {
         player.GetComponent<Player>();
+        textShaker.GetComponent<TextMeshProUGUI>();
         input = InputSystem.actions.FindAction("Jump");
     }
 
     private void Start()
     {
+        startBallSpeed = ballSpeed;
         ResetBall();
     }
 
@@ -50,6 +54,11 @@ public class Ball : MonoBehaviour
     private void ResetBall()
     {
         isAttachedToPlayer = true;
+        UIManager.Instance.scoreMultiplier = 0;
+        textShaker.GetComponent <TextMeshProUGUI>().fontSize = textShaker.initialFontSize;
+        textShaker.shakeMultiplier = 1f;
+        textShaker.constantShakeStrength = 0f;
+        ballSpeed = startBallSpeed;
         player.playerWidthUpdated = false;
         player.isShort = false;
         gameObject.transform.parent = player.transform;
@@ -82,7 +91,7 @@ public class Ball : MonoBehaviour
         if (collision.gameObject.CompareTag("Block"))
         {
             direction = Vector2.Reflect(direction, collision.GetContact(0).normal);
-            collision.gameObject.GetComponent<Block>().HandleCollision(this, ref blocks.totalBlocks);
+            collision.gameObject.GetComponent<Block>().HandleCollision(this, ref blocks.totalBlocks, ref textShaker.start);
         }
 
         if (collision.gameObject.CompareTag("Player"))

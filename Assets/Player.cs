@@ -8,7 +8,7 @@ public class Player : MonoBehaviour
     private InputAction moveAction;
     private SpriteRenderer spriteRenderer;
 
-    public bool playerWidthUpdated = false;
+    public bool playerWidthUpdated = true;
     public bool isShort = false;
 
     private float screenHalfWidthInWorldUnits;

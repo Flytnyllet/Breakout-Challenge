@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
 
 public class UIManager : MonoBehaviour
@@ -10,23 +11,29 @@ public class UIManager : MonoBehaviour
 
     public static float highScore = 0f;
 
+    private InputAction pauseAction;
+
     [SerializeField] private Player player;
     [SerializeField] private Ball ball;
 
+    public int scoreMultiplier;
     public float score = 0f;
     public bool isGameOver = false;
     public bool isGameWon = false;
+    public bool isGamePaused = false;
 
     private List<GameObject> playerLives;
     [SerializeField] private GameObject gameOverPanel;
     [SerializeField] private GameObject victoryPanel;
+    [SerializeField] private GameObject pausedPanel;
     [SerializeField] private GameObject healthPanel;
     [SerializeField] private GameObject healthPrefab;
 
     [SerializeField] private TextMeshProUGUI scoreText;
     [SerializeField] private TextMeshProUGUI scoreTextWin;
-    [SerializeField] private TextMeshProUGUI highScoreText;
-    [SerializeField] private TextMeshProUGUI highScoreText2;
+    [SerializeField] private TextMeshProUGUI highScoreTextWin;
+    [SerializeField] private TextMeshProUGUI highScoreTextGameOver;
+    [SerializeField] private TextMeshProUGUI comboText;
 
     private void Awake()
     {
@@ -34,14 +41,15 @@ public class UIManager : MonoBehaviour
             Instance = this;
 
         playerLives = new List<GameObject>();
+        pauseAction = InputSystem.actions["Pause"];
     }
 
     private void Start()
     {
         score = 0f;
-        highScore = PlayerPrefs.GetFloat(highScoreText.text, highScore);
-        highScoreText.text = highScore.ToString();
-        highScoreText2.text = highScore.ToString();
+        highScore = PlayerPrefs.GetFloat(highScoreTextWin.text, highScore);
+        highScoreTextWin.text = highScore.ToString();
+        highScoreTextGameOver.text = highScore.ToString();
 
         for (int i = 0; i < player.playerLives; i++)
         {
@@ -54,6 +62,7 @@ public class UIManager : MonoBehaviour
     private void Update()
     {
         scoreText.text = score.ToString();
+        comboText.text = "Combo " + scoreMultiplier.ToString() + "x";
 
         if (isGameWon)
         {
@@ -62,9 +71,9 @@ public class UIManager : MonoBehaviour
             if (score > highScore)
             {
                 highScore = score;
-                highScoreText.text = "High Score: " + highScore.ToString();
+                highScoreTextWin.text = "High Score: " + highScore.ToString();
 
-                PlayerPrefs.SetFloat(highScoreText.text, highScore);
+                PlayerPrefs.SetFloat(highScoreTextWin.text, highScore);
                 PlayerPrefs.Save();
             }
         }
@@ -76,10 +85,16 @@ public class UIManager : MonoBehaviour
         if (isGameOver)
         {
             gameOverPanel.SetActive(true);
-            highScoreText2.text = "High Score: " + highScore.ToString();
+            highScoreTextGameOver.text = "High Score: " + highScore.ToString();
         }
         else if (!isGameOver)
             gameOverPanel.SetActive(false);
+
+        if (pauseAction.triggered && !isGameOver && !isGameWon)
+        {
+            pausedPanel.SetActive(!pausedPanel.activeSelf);
+            Time.timeScale = pausedPanel.activeSelf ? 0.0f : 1.0f;
+        }
 
         if (ball.isLifeLost)
         {
