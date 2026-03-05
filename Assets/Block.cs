@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Audio;
 
 public class Block : MonoBehaviour
 {
@@ -8,14 +9,28 @@ public class Block : MonoBehaviour
     [SerializeField] private int ChanceToSpawnPowerup = 10;
     [SerializeField] List<GameObject> powerups = new List<GameObject>();
 
-    public void HandleCollision(Ball ball, ref int totalblocks, ref bool shake)
+    private SpriteRenderer sr;
+
+    private void Awake()
+    {
+        sr = GetComponent<SpriteRenderer>();
+    }
+
+    public void HandleCollision(Ball ball, ref int totalblocks, ref bool shake, ref bool cameraShake, ParticleSystem particle)
     {
         Debug.Log("Block hit!");
         blockHealth--;
         if (blockHealth <= 0)
         {
+            var particleInstance = particle.GetComponent<ParticleSystem>().main;
+            particleInstance.startColor = sr.color;
+
+            var instance = Instantiate(particle, transform.position, Quaternion.identity);
+            instance.Play();
+
             UIManager.Instance.scoreMultiplier++;
             shake = true;
+            cameraShake = true;
             totalblocks--;
             ball.ballSpeed += ball.ballSpeedIncrease;
             MaybeSpawnPowerUp(ChanceToSpawnPowerup);

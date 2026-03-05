@@ -8,6 +8,7 @@ public class Ball : MonoBehaviour
 {
     [SerializeField] private BlockSetup blocks;
     [SerializeField] private TextShaker textShaker;
+    [SerializeField] private ScreenShake cameraShaker;
 
     private InputAction input;
 
@@ -15,6 +16,8 @@ public class Ball : MonoBehaviour
     [SerializeField] public float ballSpeed = 8f;
     [SerializeField] public float ballSpeedIncrease = 0.5f;
     [SerializeField] public bool isLifeLost;
+    [SerializeField] public ParticleSystem blockDestroyedParticle;
+    [SerializeField] public AudioSource audioSource;
 
     [SerializeField] private Player player;
     [SerializeField] private bool isAttachedToPlayer;
@@ -23,6 +26,7 @@ public class Ball : MonoBehaviour
 
     private void Awake()
     {
+        audioSource = GetComponent<AudioSource>();
         player.GetComponent<Player>();
         textShaker.GetComponent<TextMeshProUGUI>();
         input = InputSystem.actions.FindAction("Jump");
@@ -38,6 +42,11 @@ public class Ball : MonoBehaviour
     {
         if (isAttachedToPlayer && input.WasPressedThisFrame())
             LaunchBall();
+
+        if (direction.y < 0.2f && direction.y > 0f)
+            direction.y = 0.2f;
+        else if (direction.y < 0f && direction.y > -0.2f)
+            direction.y = -0.2f;
 
         if (!isAttachedToPlayer && !UIManager.Instance.isGameWon && !UIManager.Instance.isGameOver)
             transform.Translate(ballSpeed * Time.deltaTime * direction);
@@ -55,7 +64,7 @@ public class Ball : MonoBehaviour
     {
         isAttachedToPlayer = true;
         UIManager.Instance.scoreMultiplier = 0;
-        textShaker.GetComponent <TextMeshProUGUI>().fontSize = textShaker.initialFontSize;
+        textShaker.GetComponent<TextMeshProUGUI>().fontSize = textShaker.initialFontSize;
         textShaker.shakeMultiplier = 1f;
         textShaker.constantShakeStrength = 0f;
         ballSpeed = startBallSpeed;
@@ -67,6 +76,8 @@ public class Ball : MonoBehaviour
 
     private void PlayerBounce()
     {
+        if (!isAttachedToPlayer)
+            audioSource.PlayOneShot(audioSource.clip);
         direction = new Vector2(transform.position.x - player.transform.position.x, Mathf.Abs(direction.y)).normalized;
     }
 
@@ -75,6 +86,7 @@ public class Ball : MonoBehaviour
         if (collision.gameObject.CompareTag("Wall"))
         {
             direction = Vector2.Reflect(direction, collision.GetContact(0).normal);
+            audioSource.PlayOneShot(audioSource.clip);
         }
 
         if (collision.gameObject.CompareTag("Roof"))
@@ -85,13 +97,15 @@ public class Ball : MonoBehaviour
                 player.isShort = true;
                 player.playerWidthUpdated = false;
                 Debug.Log("Player is now short. Player width will be updated in the next frame.");
+                audioSource.PlayOneShot(audioSource.clip);
             }
         }
 
         if (collision.gameObject.CompareTag("Block"))
         {
             direction = Vector2.Reflect(direction, collision.GetContact(0).normal);
-            collision.gameObject.GetComponent<Block>().HandleCollision(this, ref blocks.totalBlocks, ref textShaker.start);
+            collision.gameObject.GetComponent<Block>().HandleCollision(this, ref blocks.totalBlocks, ref textShaker.start, ref cameraShaker.startCameraShake, blockDestroyedParticle);
+            audioSource.PlayOneShot(audioSource.clip);
         }
 
         if (collision.gameObject.CompareTag("Player"))
